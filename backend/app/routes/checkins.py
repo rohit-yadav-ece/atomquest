@@ -44,8 +44,8 @@ def compute_score(goal: Goal, actual: float, quarter: str) -> float:
                   "Q3": goal.target_q3, "Q4": goal.target_q4}
     target = target_map.get(quarter) or goal.annual_target
 
-   if target == 0 and goal.uom != UoMEnum.zero_based:
-    return 0.0
+  if target == 0 and goal.uom != UoMEnum.zero_based:
+        return 0.0
 
     if goal.uom in [UoMEnum.numeric, UoMEnum.percentage]:
         return round(min((actual / target) * 100, 150), 2)  # cap at 150%
