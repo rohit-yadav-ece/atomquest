@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.database import engine
 from app.models.models import Base
-from app.routes import auth, goals, checkins, admin
+from app.routes import auth, goals, checkins, admin, reporting, shared_goals
 
 Base.metadata.create_all(bind=engine)
 
@@ -20,6 +20,8 @@ app.include_router(auth.router)
 app.include_router(goals.router)
 app.include_router(checkins.router)
 app.include_router(admin.router)
+app.include_router(reporting.router)
+app.include_router(shared_goals.router)
 
 
 @app.get("/")
