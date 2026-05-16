@@ -44,26 +44,23 @@ def compute_score(goal: Goal, actual: float, quarter: str) -> float:
                   "Q3": goal.target_q3, "Q4": goal.target_q4}
     target = target_map.get(quarter) or goal.annual_target
 
-  if target == 0 and goal.uom != UoMEnum.zero_based:
-        return 0.0
-
-    if goal.uom in [UoMEnum.numeric, UoMEnum.percentage]:
-        return round(min((actual / target) * 100, 150), 2)  # cap at 150%
-
-    elif goal.uom == UoMEnum.timeline:
-        # For timeline: completing ON time = 100, early = bonus, late = penalty
-        # actual = days taken, target = planned days
-        if actual <= target:
-            return round(min((target / actual) * 100, 120), 2)
-        else:
-            return round(max((target / actual) * 100, 0), 2)
-
-    elif goal.uom == UoMEnum.zero_based:
-        # Zero-based: target is 0 occurrences, actual should be 0
+    if goal.uom == UoMEnum.zero_based:
         if actual == 0:
             return 100.0
         else:
             return round(max(100 - (actual * 10), 0), 2)
+
+    if target == 0:
+        return 0.0
+
+    if goal.uom in [UoMEnum.numeric, UoMEnum.percentage]:
+        return round(min((actual / target) * 100, 150), 2)
+
+    elif goal.uom == UoMEnum.timeline:
+        if actual <= target:
+            return round(min((target / actual) * 100, 120), 2)
+        else:
+            return round(max((target / actual) * 100, 0), 2)
 
     return 0.0
 
@@ -81,14 +78,12 @@ def create_checkin(
     if not goal:
         raise HTTPException(status_code=404, detail="Goal not found")
 
-    # Ensure sheet is approved
     sheet = db.query(GoalSheet).filter(GoalSheet.id == goal.sheet_id).first()
     if sheet.status != GoalStatusEnum.approved:
         raise HTTPException(status_code=400, detail="Goal sheet must be approved before check-ins")
     if sheet.employee_id != current_user.id:
         raise HTTPException(status_code=403, detail="Access denied")
 
-    # Prevent duplicate check-in for same quarter
     existing = db.query(CheckIn).filter(
         CheckIn.goal_id == payload.goal_id,
         CheckIn.quarter == payload.quarter
