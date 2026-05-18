@@ -65,7 +65,7 @@ export default function Login() {
     setLoading(true);
     if (role) setLoadingRole(role);
     try {
-      const data = await api.post("/api/auth/login", { email: finalEmail, password: finalPass });
+      const data = await api.login(finalEmail, finalPass);
       login(data.access_token, data.user);
       if (data.user.role === "admin") navigate("/admin");
       else if (data.user.role === "manager") navigate("/manager");
