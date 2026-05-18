@@ -4,10 +4,10 @@ import { useAuth } from "../context/AuthContext";
 import { api } from "../utils/api";
 
 const DEMO_ACCOUNTS = [
-  { role: "Employee", email: "emp1@atomquest.com", password: "emp123", desc: "Create goals, log check-ins", color: "#6366f1", bg: "#eef2ff", darkBg: "#1e1b4b", icon: "👤" },
-  { role: "Employee 2", email: "emp2@atomquest.com", password: "emp123", desc: "Second employee account", color: "#8b5cf6", bg: "#f5f3ff", darkBg: "#2e1065", icon: "👤" },
-  { role: "Manager", email: "manager@atomquest.com", password: "manager123", desc: "Approve goals, check-ins", color: "#0ea5e9", bg: "#f0f9ff", darkBg: "#0c4a6e", icon: "👔" },
-  { role: "Admin", email: "admin@atomquest.com", password: "admin123", desc: "Manage cycles, analytics", color: "#10b981", bg: "#f0fdf4", darkBg: "#064e3b", icon: "⚙️" },
+  { role: "Employee", email: "emp1@atomquest.com", password: "emp123", desc: "Create goals, log quarterly check-ins", color: "#6366f1", lightBg: "#eef2ff", darkBg: "#1e1b4b" },
+  { role: "Employee 2", email: "emp2@atomquest.com", password: "emp123", desc: "Second employee with shared goals", color: "#8b5cf6", lightBg: "#f5f3ff", darkBg: "#2e1065" },
+  { role: "Manager", email: "manager@atomquest.com", password: "manager123", desc: "Approve goals, conduct check-ins", color: "#0ea5e9", lightBg: "#f0f9ff", darkBg: "#0c4a6e" },
+  { role: "Admin", email: "admin@atomquest.com", password: "admin123", desc: "Manage cycles, reports, analytics", color: "#f59e0b", lightBg: "#fffbeb", darkBg: "#451a03" },
 ];
 
 export default function Login() {
@@ -24,10 +24,10 @@ export default function Login() {
     localStorage.setItem("aq_theme", dark ? "dark" : "light");
   }, [dark]);
 
-  const handleSubmit = async (e, overrideEmail, overridePass, role) => {
-    if (e) e.preventDefault();
+  const handleLogin = async (overrideEmail, overridePass, role) => {
     const finalEmail = overrideEmail || email;
     const finalPass = overridePass || password;
+    if (!finalEmail || !finalPass) return;
     setError("");
     setLoading(true);
     if (role) setLoadingRole(role);
@@ -38,121 +38,91 @@ export default function Login() {
       else if (data.user.role === "manager") navigate("/manager");
       else navigate("/dashboard");
     } catch (err) {
-      setError("Invalid email or password");
+      setError("Invalid credentials. If first load, backend may be waking up (30s). Try again!");
     } finally {
       setLoading(false);
       setLoadingRole("");
     }
   };
 
-  const bg = dark ? "#0f0f18" : "#f8f7ff";
-  const card = dark ? "#16162a" : "#ffffff";
-  const border = dark ? "#2a2a45" : "#e8e5ff";
-  const text = dark ? "#ffffff" : "#1e1b4b";
-  const muted = dark ? "#8b8ba7" : "#9ca3af";
-  const inputBg = dark ? "#1e1e35" : "#fafafa";
-  const inputBorder = dark ? "#2a2a45" : "#e5e7eb";
-  const dividerLine = dark ? "#2a2a45" : "#e5e7eb";
+  const d = dark;
+  const pageBg = d ? "#0a0a14" : "#f4f3ff";
+  const cardBg = d ? "#13131f" : "#ffffff";
+  const cardBorder = d ? "#1e1e30" : "#e8e5ff";
+  const textPrimary = d ? "#f0f0ff" : "#1e1b4b";
+  const textMuted = d ? "#6b6b8a" : "#9ca3af";
+  const inputBg = d ? "#1a1a2e" : "#f9f9ff";
+  const inputBorder = d ? "#2a2a40" : "#e5e3ff";
+  const labelColor = d ? "#9090c0" : "#4b5563";
+  const dividerColor = d ? "#1e1e30" : "#e8e5ff";
 
   return (
-    <div style={{ minHeight: "100vh", background: bg, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Inter', -apple-system, sans-serif", padding: "20px", transition: "background 0.3s" }}>
-      <div style={{ background: card, borderRadius: "20px", border: `1px solid ${border}`, padding: "40px", width: "100%", maxWidth: "440px", boxShadow: dark ? "0 20px 60px rgba(0,0,0,0.5)" : "0 20px 60px rgba(99,102,241,0.08)" }}>
+    <div style={{ minHeight: "100vh", background: pageBg, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Inter',-apple-system,sans-serif", padding: "16px", position: "relative" }}>
 
-        {/* Header */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "32px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <img
-              src="https://images.seeklogo.com/logo-png/52/1/atomberg-logo-png_seeklogo-529953.png"
-              alt="Atomberg"
-              style={{ width: "40px", height: "40px", objectFit: "contain" }}
-            />
-            <div>
-              <div style={{ fontSize: "20px", fontWeight: "700", color: text, letterSpacing: "-0.5px" }}>AtomQuest</div>
-              <div style={{ fontSize: "11px", color: dark ? "#818cf8" : "#6366f1", marginTop: "1px" }}>Goal Setting & Tracking Portal · by Atomberg</div>
-            </div>
+      {/* Dark/Light toggle — fixed top right */}
+      <button
+        onClick={() => setDark(d => !d)}
+        style={{ position: "fixed", top: "16px", right: "16px", background: d ? "#1e1e30" : "#ede9ff", border: "none", borderRadius: "20px", padding: "8px 16px", cursor: "pointer", fontSize: "13px", color: d ? "#a5b4fc" : "#6366f1", fontWeight: "500", zIndex: 1000 }}
+      >
+        {d ? "☀️ Light" : "🌙 Dark"}
+      </button>
+
+      {/* Main card */}
+      <div style={{ background: cardBg, borderRadius: "16px", border: `1px solid ${cardBorder}`, padding: "28px 32px", width: "100%", maxWidth: "420px", boxShadow: d ? "0 24px 60px rgba(0,0,0,0.6)" : "0 20px 60px rgba(99,102,241,0.1)" }}>
+
+        {/* Logo */}
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "24px" }}>
+          <img src="https://images.seeklogo.com/logo-png/52/1/atomberg-logo-png_seeklogo-529953.png" alt="Atomberg" style={{ width: "36px", height: "36px", objectFit: "contain", borderRadius: "8px" }} />
+          <div>
+            <div style={{ fontSize: "18px", fontWeight: "700", color: textPrimary, letterSpacing: "-0.4px" }}>AtomQuest</div>
+            <div style={{ fontSize: "11px", color: d ? "#6366f1" : "#6366f1" }}>Goal Setting and Tracking Portal · by Atomberg</div>
           </div>
-          <button
-            onClick={() => setDark(d => !d)}
-            style={{ background: dark ? "#2a2a45" : "#f0eeff", border: "none", borderRadius: "20px", padding: "6px 14px", cursor: "pointer", fontSize: "13px", color: dark ? "#a5b4fc" : "#6366f1", fontWeight: "500" }}
-          >
-            {dark ? "☀️ Light" : "🌙 Dark"}
-          </button>
         </div>
-
-        {/* Title */}
-        <div style={{ fontSize: "24px", fontWeight: "700", color: text, marginBottom: "4px" }}>Welcome back</div>
-        <div style={{ fontSize: "14px", color: muted, marginBottom: "28px" }}>Sign in to your account to continue</div>
 
         {/* Error */}
         {error && (
-          <div style={{ background: "#fef2f2", border: "1px solid #fecaca", color: "#dc2626", padding: "10px 14px", borderRadius: "8px", fontSize: "13px", marginBottom: "16px" }}>
+          <div style={{ background: "#fef2f2", border: "1px solid #fecaca", color: "#dc2626", padding: "9px 12px", borderRadius: "8px", fontSize: "12px", marginBottom: "14px" }}>
             ⚠️ {error}
           </div>
         )}
 
-        {/* Form */}
-        <form onSubmit={handleSubmit}>
-          <label style={{ fontSize: "13px", fontWeight: "500", color: dark ? "#a5b4fc" : "#374151", marginBottom: "6px", display: "block" }}>Email address</label>
-          <input
-            type="email"
-            placeholder="you@company.com"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            required
-            style={{ width: "100%", padding: "11px 14px", borderRadius: "10px", border: `1px solid ${inputBorder}`, background: inputBg, color: text, fontSize: "14px", marginBottom: "16px", outline: "none", boxSizing: "border-box" }}
-          />
-          <label style={{ fontSize: "13px", fontWeight: "500", color: dark ? "#a5b4fc" : "#374151", marginBottom: "6px", display: "block" }}>Password</label>
-          <input
-            type="password"
-            placeholder="••••••••"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            required
-            style={{ width: "100%", padding: "11px 14px", borderRadius: "10px", border: `1px solid ${inputBorder}`, background: inputBg, color: text, fontSize: "14px", marginBottom: "20px", outline: "none", boxSizing: "border-box" }}
-          />
-          <button
-            type="submit"
-            disabled={loading}
-            style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg, #6366f1, #8b5cf6)", color: "white", fontSize: "15px", fontWeight: "600", cursor: "pointer", opacity: loading && !loadingRole ? 0.7 : 1 }}
-          >
-            {loading && !loadingRole ? "Signing in..." : "Sign In →"}
-          </button>
-        </form>
-
-        {/* Divider */}
-        <div style={{ display: "flex", alignItems: "center", gap: "12px", margin: "24px 0" }}>
-          <div style={{ flex: 1, height: "1px", background: dividerLine }} />
-          <span style={{ fontSize: "12px", color: muted, fontWeight: "500" }}>or try a demo account</span>
-          <div style={{ flex: 1, height: "1px", background: dividerLine }} />
+        {/* Email */}
+        <div style={{ marginBottom: "12px" }}>
+          <label style={{ display: "block", fontSize: "13px", fontWeight: "500", color: labelColor, marginBottom: "5px" }}>Email</label>
+          <input type="email" placeholder="Enter your email" value={email} onChange={e => setEmail(e.target.value)}
+            style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: `1px solid ${inputBorder}`, background: inputBg, color: textPrimary, fontSize: "14px", outline: "none", boxSizing: "border-box" }} />
         </div>
 
-        <div style={{ fontSize: "11px", fontWeight: "600", color: muted, marginBottom: "12px", textAlign: "center", letterSpacing: "0.08em", textTransform: "uppercase" }}>
-          Demo accounts — click to sign in instantly
+        {/* Password */}
+        <div style={{ marginBottom: "16px" }}>
+          <label style={{ display: "block", fontSize: "13px", fontWeight: "500", color: labelColor, marginBottom: "5px" }}>Password</label>
+          <input type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && handleLogin()}
+            style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: `1px solid ${inputBorder}`, background: inputBg, color: textPrimary, fontSize: "14px", outline: "none", boxSizing: "border-box" }} />
+        </div>
+
+        {/* Sign in button */}
+        <button onClick={() => handleLogin()} disabled={loading}
+          style={{ width: "100%", padding: "11px", borderRadius: "8px", border: "none", background: "linear-gradient(135deg,#6366f1,#8b5cf6)", color: "white", fontSize: "15px", fontWeight: "600", cursor: "pointer", opacity: loading && !loadingRole ? 0.7 : 1, marginBottom: "20px" }}>
+          {loading && !loadingRole ? "Signing in..." : "Sign in"}
+        </button>
+
+        {/* Divider */}
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" }}>
+          <div style={{ flex: 1, height: "1px", background: dividerColor }} />
+          <span style={{ fontSize: "11px", color: textMuted, fontWeight: "500", textTransform: "uppercase", letterSpacing: "0.07em" }}>Demo accounts — click to sign in instantly</span>
+          <div style={{ flex: 1, height: "1px", background: dividerColor }} />
         </div>
 
         {/* Demo buttons */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
           {DEMO_ACCOUNTS.map(acc => (
-            <button
-              key={acc.role}
-              onClick={() => handleSubmit(null, acc.email, acc.password, acc.role)}
-              disabled={loading}
-              style={{
-                background: dark ? acc.darkBg : acc.bg,
-                border: `1px solid ${acc.color}40`,
-                borderRadius: "10px",
-                padding: "12px",
-                cursor: "pointer",
-                textAlign: "left",
-                opacity: loading && loadingRole !== acc.role ? 0.5 : 1,
-                transition: "transform 0.1s",
-              }}
-            >
-              <div style={{ fontSize: "18px", marginBottom: "4px" }}>{acc.icon}</div>
-              <div style={{ fontSize: "13px", fontWeight: "600", color: acc.color }}>
+            <button key={acc.role} onClick={() => handleLogin(acc.email, acc.password, acc.role)} disabled={loading}
+              style={{ background: d ? acc.darkBg : acc.lightBg, border: `1px solid ${acc.color}50`, borderRadius: "10px", padding: "10px 12px", cursor: "pointer", textAlign: "left", opacity: loading && loadingRole !== acc.role ? 0.5 : 1 }}>
+              <div style={{ fontSize: "12px", fontWeight: "600", color: acc.color, marginBottom: "3px" }}>
                 {loadingRole === acc.role ? "Signing in..." : acc.role}
               </div>
-              <div style={{ fontSize: "11px", color: muted, marginTop: "2px" }}>{acc.desc}</div>
+              <div style={{ fontSize: "11px", color: textMuted, lineHeight: "1.4" }}>{acc.desc}</div>
             </button>
           ))}
         </div>
