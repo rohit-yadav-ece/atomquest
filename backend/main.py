@@ -3,6 +3,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.database import engine
 from app.models.models import Base
 from app.routes import auth, goals, checkins, admin, reporting, shared_goals
+from seed import seed_db
+
+@app.on_event("startup")
+def on_startup():
+    seed_db()
+
 
 Base.metadata.create_all(bind=engine)
 
