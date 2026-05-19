@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { api } from "../utils/api";
 
 const DEMO_ACCOUNTS = [
   { role: "Employee", email: "emp1@atomquest.com", password: "emp123", desc: "Create goals & check-ins", color: "#6366f1" },
@@ -65,10 +64,9 @@ export default function Login() {
     setLoading(true);
     if (role) setLoadingRole(role);
     try {
-      const data = await api.login(finalEmail, finalPass);
-      login(data.access_token, data.user);
-      if (data.user.role === "admin") navigate("/admin");
-      else if (data.user.role === "manager") navigate("/manager");
+      const user = await login(finalEmail, finalPass);
+      if (user.role === "admin") navigate("/admin");
+      else if (user.role === "manager") navigate("/manager");
       else navigate("/dashboard");
     } catch (err) {
       setError("Login failed. Backend may be sleeping — click 'Wake Backend' below.");
@@ -99,14 +97,11 @@ export default function Login() {
         {d ? "☀️ Light" : "🌙 Dark"}
       </button>
 
-      {/* LEFT PANEL — Dashboard Preview */}
+      {/* LEFT PANEL */}
       <div style={{ width: "50%", background: leftBg, padding: "40px", display: "flex", flexDirection: "column", justifyContent: "center", position: "relative", overflow: "hidden" }}>
-
-        {/* Background glow */}
         <div style={{ position: "absolute", top: "-100px", left: "-100px", width: "400px", height: "400px", background: "radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 70%)", pointerEvents: "none" }} />
         <div style={{ position: "absolute", bottom: "-100px", right: "-100px", width: "300px", height: "300px", background: "radial-gradient(circle, rgba(139,92,246,0.1) 0%, transparent 70%)", pointerEvents: "none" }} />
 
-        {/* Logo */}
         <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "40px" }}>
           <img src="https://images.seeklogo.com/logo-png/52/1/atomberg-logo-png_seeklogo-529953.png" alt="Atomberg"
             style={{ width: "32px", height: "32px", objectFit: "contain", borderRadius: "6px" }} />
@@ -116,7 +111,6 @@ export default function Login() {
           </div>
         </div>
 
-        {/* Headline */}
         <div style={{ marginBottom: "32px" }}>
           <div style={{ fontSize: "28px", fontWeight: "700", color: "white", lineHeight: "1.3", marginBottom: "10px" }}>
             Set goals.<br />Track progress.<br />
@@ -127,7 +121,6 @@ export default function Login() {
           </div>
         </div>
 
-        {/* Stats row */}
         <div style={{ display: "flex", gap: "10px", marginBottom: "24px" }}>
           {STATS.map(s => (
             <div key={s.label} style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "10px", padding: "10px 12px" }}>
@@ -138,7 +131,6 @@ export default function Login() {
           ))}
         </div>
 
-        {/* Goal progress bars */}
         <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "12px", padding: "16px" }}>
           <div style={{ fontSize: "11px", fontWeight: "600", color: "rgba(255,255,255,0.4)", marginBottom: "14px", letterSpacing: "0.06em", textTransform: "uppercase" }}>Q1 Achievement</div>
           {GOALS.map((g, i) => (
@@ -159,11 +151,10 @@ export default function Login() {
         </div>
       </div>
 
-      {/* RIGHT PANEL — Login form */}
+      {/* RIGHT PANEL */}
       <div style={{ width: "50%", display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 32px" }}>
         <div style={{ width: "100%", maxWidth: "380px" }}>
 
-          {/* Form card */}
           <div style={{ background: cardBg, borderRadius: "16px", border: `1px solid ${cardBorder}`, padding: "28px", marginBottom: "12px", boxShadow: d ? "none" : "0 20px 60px rgba(99,102,241,0.1)" }}>
             <div style={{ fontSize: "22px", fontWeight: "700", color: textMain, marginBottom: "4px" }}>Welcome back</div>
             <div style={{ fontSize: "13px", color: textMuted, marginBottom: "22px" }}>Sign in to your account</div>
@@ -199,7 +190,6 @@ export default function Login() {
             </button>
           </div>
 
-          {/* Demo accounts */}
           <div style={{ background: d ? "#0a0a0a" : "#f8f7ff", borderRadius: "14px", border: `1px solid ${demoBorder}`, padding: "16px 20px" }}>
             <div style={{ fontSize: "11px", fontWeight: "600", color: textMuted, marginBottom: "12px", letterSpacing: "0.08em", textTransform: "uppercase" }}>
               Demo accounts — click to sign in instantly
@@ -222,5 +212,6 @@ export default function Login() {
     </div>
   );
 }
+
 
 
