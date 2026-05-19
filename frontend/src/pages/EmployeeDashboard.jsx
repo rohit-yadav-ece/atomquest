@@ -16,7 +16,51 @@ function useT(dark) {
     innerBg:     dark ? "#0a0a0a" : "#f8f7ff",
     innerBorder: dark ? "#1a1a1a" : "#ede9ff",
     statCard:    dark ? "#111"    : "#ffffff",
+    skelBase:    dark ? "#1a1a1a" : "#f0eeff",
+    skelShine:   dark ? "#252525" : "#e8e4ff",
   };
+}
+
+// Skeleton pulse component
+function Skel({ width = "100%", height = 16, radius = 6, dark, style = {} }) {
+  const base  = dark ? "#1a1a1a" : "#ede9ff";
+  const shine = dark ? "#252525" : "#e0dbff";
+  return (
+    <div style={{
+      width, height, borderRadius: radius,
+      background: `linear-gradient(90deg, ${base} 25%, ${shine} 50%, ${base} 75%)`,
+      backgroundSize: "200% 100%",
+      animation: "skelShimmer 1.4s ease infinite",
+      ...style
+    }} />
+  );
+}
+
+function SkeletonCard({ dark }) {
+  const t = useT(dark);
+  return (
+    <div style={{ background: t.card, border: `1px solid ${t.cardBorder}`, borderRadius: 16, overflow: "hidden" }}>
+      <div style={{ padding: "20px 24px", borderBottom: `1px solid ${t.innerBorder}`, display: "flex", alignItems: "center", gap: 16 }}>
+        <Skel width={72} height={72} radius={36} dark={dark} />
+        <div style={{ flex: 1 }}>
+          <Skel width="40%" height={18} radius={6} dark={dark} style={{ marginBottom: 10 }} />
+          <Skel width="60%" height={13} radius={4} dark={dark} />
+        </div>
+      </div>
+      <div style={{ padding: "16px 24px 20px" }}>
+        <Skel width="30%" height={11} radius={4} dark={dark} style={{ marginBottom: 16 }} />
+        {[1,2,3].map(i => (
+          <div key={i} style={{ marginBottom: 14 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+              <Skel width="50%" height={13} radius={4} dark={dark} />
+              <Skel width="8%" height={13} radius={4} dark={dark} />
+            </div>
+            <Skel width="100%" height={6} radius={3} dark={dark} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function ScoreRing({ score, dark }) {
@@ -66,12 +110,10 @@ export default function EmployeeDashboard() {
       try {
         const data = await api.get("/api/goals/sheet/my");
         const sheetsData = Array.isArray(data) ? data : [];
-        // Fetch checkins for every goal to show real scores
         for (const sheet of sheetsData) {
           for (const goal of sheet.goals || []) {
-            try {
-              goal.checkins = await api.get(`/api/checkins/goal/${goal.id}`);
-            } catch { goal.checkins = []; }
+            try { goal.checkins = await api.get(`/api/checkins/goal/${goal.id}`); }
+            catch { goal.checkins = []; }
           }
         }
         setSheets(sheetsData);
@@ -95,17 +137,46 @@ export default function EmployeeDashboard() {
   };
 
   if (loading) return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "60vh" }}>
-      <div style={{ textAlign: "center" }}>
-        <div style={{ width: 40, height: 40, border: `3px solid ${dark ? "#1e1e1e" : "#e5e7eb"}`, borderTop: "3px solid #6366f1", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 12px" }} />
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-        <div style={{ color: t.muted, fontSize: 13 }}>Loading your goals...</div>
+    <div style={{ fontFamily: "'Inter', -apple-system, sans-serif", maxWidth: 900, margin: "0 auto" }}>
+      <style>{`
+        @keyframes skelShimmer {
+          0%   { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+      `}</style>
+
+      {/* Header skeleton */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28 }}>
+        <div>
+          <Skel width={80} height={11} radius={4} dark={dark} style={{ marginBottom: 8 }} />
+          <Skel width={160} height={28} radius={6} dark={dark} style={{ marginBottom: 8 }} />
+          <Skel width={200} height={13} radius={4} dark={dark} />
+        </div>
+        <Skel width={110} height={40} radius={10} dark={dark} />
+      </div>
+
+      {/* Stat cards skeleton */}
+      <div style={{ display: "flex", gap: 12, marginBottom: 28 }}>
+        {[1,2,3].map(i => (
+          <div key={i} style={{ flex: 1, background: t.statCard, border: `1px solid ${t.cardBorder}`, borderRadius: 12, padding: "16px 20px" }}>
+            <Skel width="50%" height={28} radius={6} dark={dark} style={{ marginBottom: 8 }} />
+            <Skel width="70%" height={11} radius={4} dark={dark} style={{ marginBottom: 6 }} />
+            <Skel width="40%" height={11} radius={4} dark={dark} />
+          </div>
+        ))}
+      </div>
+
+      {/* Sheet cards skeleton */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <SkeletonCard dark={dark} />
+        <SkeletonCard dark={dark} />
       </div>
     </div>
   );
 
   return (
     <div style={{ fontFamily: "'Inter', -apple-system, sans-serif", color: t.text, maxWidth: 900, margin: "0 auto" }}>
+      <style>{`@keyframes skelShimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }`}</style>
 
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28 }}>
@@ -156,17 +227,13 @@ export default function EmployeeDashboard() {
             const sheetAvg = sheetScores.length ? Math.round(sheetScores.reduce((a, b) => a + b, 0) / sheetScores.length) : null;
             return (
               <div key={sheet.id} style={{ background: t.card, border: `1px solid ${t.cardBorder}`, borderRadius: 16, overflow: "hidden", boxShadow: dark ? "none" : "0 2px 12px rgba(99,102,241,0.06)" }}>
-
-                {/* Header */}
                 <div style={{ padding: "20px 24px", borderBottom: `1px solid ${t.innerBorder}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
                     <ScoreRing score={sheetAvg} dark={dark} />
                     <div>
                       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
                         <span style={{ fontSize: 16, fontWeight: 700, color: t.text }}>Goal Sheet #{sheet.id}</span>
-                        <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 20, fontWeight: 600, background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}` }}>
-                          {cfg.label}
-                        </span>
+                        <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 20, fontWeight: 600, background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}` }}>{cfg.label}</span>
                       </div>
                       <div style={{ fontSize: 12, color: t.muted }}>
                         {sheet.goals?.length || 0} goals · FY 2025-26 · {sheetScores.length} check-ins completed
@@ -188,15 +255,11 @@ export default function EmployeeDashboard() {
                     )}
                   </div>
                 </div>
-
-                {/* Manager comment */}
                 {sheet.manager_comment && (
                   <div style={{ margin: "16px 24px 0", padding: "10px 14px", background: dark ? "#1a1000" : "#fffbeb", border: `1px solid ${dark ? "#3a2800" : "#fde68a"}`, borderRadius: 8, fontSize: 12, color: "#f59e0b" }}>
                     💬 <strong>Manager:</strong> {sheet.manager_comment}
                   </div>
                 )}
-
-                {/* Goals */}
                 <div style={{ padding: "16px 24px 20px" }}>
                   <div style={{ fontSize: 11, color: t.muted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>Goals & Weightage</div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -213,12 +276,8 @@ export default function EmployeeDashboard() {
                               <span style={{ fontSize: 13, color: t.subtext, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{goal.title}</span>
                             </div>
                             <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0, marginLeft: 12 }}>
-                              {latestScore != null && (
-                                <span style={{ fontSize: 12, color: latestScore >= 80 ? "#10b981" : "#f59e0b", fontWeight: 600 }}>{latestScore}pts</span>
-                              )}
-                              {completedCheckins > 0 && (
-                                <span style={{ fontSize: 11, color: t.muted }}>{completedCheckins} check-in{completedCheckins > 1 ? "s" : ""}</span>
-                              )}
+                              {latestScore != null && <span style={{ fontSize: 12, color: latestScore >= 80 ? "#10b981" : "#f59e0b", fontWeight: 600 }}>{latestScore}pts</span>}
+                              {completedCheckins > 0 && <span style={{ fontSize: 11, color: t.muted }}>{completedCheckins} check-in{completedCheckins > 1 ? "s" : ""}</span>}
                               <span style={{ fontSize: 13, fontWeight: 700, color }}>{goal.weightage}%</span>
                             </div>
                           </div>
