@@ -1,5 +1,9 @@
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate, NavLink } from "react-router-dom";
+import { useState, useEffect, createContext, useContext } from "react";
+
+export const ThemeContext = createContext({ dark: true, setDark: () => {} });
+export function useTheme() { return useContext(ThemeContext); }
 
 const NAV_LINKS = {
   employee: [
@@ -23,78 +27,101 @@ const ROLE_COLOR = {
 export default function Layout({ children }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [dark, setDark] = useState(() => localStorage.getItem("aq_theme") !== "light");
+
+  useEffect(() => {
+    localStorage.setItem("aq_theme", dark ? "dark" : "light");
+  }, [dark]);
 
   const handleLogout = () => { logout(); navigate("/login"); };
   const links = NAV_LINKS[user?.role] || [];
   const roleColor = ROLE_COLOR[user?.role] || "#6366f1";
   const initials = user?.name?.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase() || "U";
 
+  const t = {
+    pageBg:        dark ? "#000"        : "#f4f3ff",
+    sidebarBg:     dark ? "#0a0a0a"     : "#ffffff",
+    sidebarBorder: dark ? "#1a1a1a"     : "#e8e5ff",
+    text:          dark ? "#fff"        : "#1e1b4b",
+    muted:         dark ? "#555"        : "#9ca3af",
+    navActive:     dark ? `${roleColor}18` : `${roleColor}15`,
+    navBorder:     dark ? `${roleColor}30` : `${roleColor}40`,
+    navInactive:   dark ? "#555"        : "#888",
+    divider:       dark ? "#1a1a1a"     : "#e8e5ff",
+    userBg:        dark ? `${roleColor}22` : `${roleColor}15`,
+    signoutBorder: dark ? "#1e1e1e"     : "#e5e3ff",
+    signoutText:   dark ? "#555"        : "#888",
+    toggleBg:      dark ? "#1a1a1a"     : "#ede9ff",
+    toggleBorder:  dark ? "#2a2a2a"     : "#d4d0ff",
+    toggleText:    dark ? "#888"        : "#6366f1",
+  };
+
   return (
-    <div style={{ minHeight: "100vh", display: "flex", background: "#000", fontFamily: "'Inter', -apple-system, sans-serif" }}>
+    <ThemeContext.Provider value={{ dark, setDark }}>
+      <div style={{ minHeight: "100vh", display: "flex", background: t.pageBg, fontFamily: "'Inter', -apple-system, sans-serif" }}>
 
-      {/* Sidebar */}
-      <aside style={{ width: 220, background: "#0a0a0a", borderRight: "1px solid #1a1a1a", display: "flex", flexDirection: "column", padding: "24px 16px", flexShrink: 0 }}>
+        {/* Sidebar */}
+        <aside style={{ width: 220, background: t.sidebarBg, borderRight: `1px solid ${t.sidebarBorder}`, display: "flex", flexDirection: "column", padding: "24px 16px", flexShrink: 0 }}>
 
-        {/* Logo */}
-        <div style={{ marginBottom: 32 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-            <img
-              src="https://images.seeklogo.com/logo-png/52/1/atomberg-logo-png_seeklogo-529953.png"
-              alt="Atomberg"
-              style={{ width: 28, height: 28, objectFit: "contain", borderRadius: 6, background: "#111", padding: 2 }}
-            />
-            <span style={{ fontSize: 16, fontWeight: 700, color: "#fff", letterSpacing: "-0.5px" }}>AtomQuest</span>
-          </div>
-          <span style={{ fontSize: 10, color: roleColor, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em", marginLeft: 38 }}>
-            {user?.role}
-          </span>
-        </div>
-
-        {/* Nav links */}
-        <nav style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1 }}>
-          {links.map(l => (
-            <NavLink key={l.to} to={l.to} end
-              style={({ isActive }) => ({
-                display: "block",
-                padding: "9px 12px",
-                borderRadius: 8,
-                fontSize: 13,
-                fontWeight: 500,
-                textDecoration: "none",
-                transition: "all 0.15s",
-                background: isActive ? `${roleColor}18` : "transparent",
-                color: isActive ? roleColor : "#555",
-                border: isActive ? `1px solid ${roleColor}30` : "1px solid transparent",
-              })}>
-              {l.label}
-            </NavLink>
-          ))}
-        </nav>
-
-        {/* User info */}
-        <div style={{ borderTop: "1px solid #1a1a1a", paddingTop: 16 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-            <div style={{ width: 32, height: 32, borderRadius: "50%", background: `${roleColor}22`, border: `1px solid ${roleColor}44`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: roleColor, flexShrink: 0 }}>
-              {initials}
+          {/* Logo */}
+          <div style={{ marginBottom: 32 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+              <img src="https://images.seeklogo.com/logo-png/52/1/atomberg-logo-png_seeklogo-529953.png" alt="Atomberg"
+                style={{ width: 28, height: 28, objectFit: "contain", borderRadius: 6, background: dark ? "#111" : "#f0eeff", padding: 2 }} />
+              <span style={{ fontSize: 16, fontWeight: 700, color: t.text, letterSpacing: "-0.5px" }}>AtomQuest</span>
             </div>
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 12, fontWeight: 600, color: "#ccc", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user?.name}</div>
-              <div style={{ fontSize: 10, color: "#444", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user?.email}</div>
-            </div>
+            <span style={{ fontSize: 10, color: roleColor, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em", marginLeft: 38 }}>
+              {user?.role}
+            </span>
           </div>
-          <button onClick={handleLogout}
-            style={{ width: "100%", padding: "7px 12px", background: "transparent", border: "1px solid #1e1e1e", borderRadius: 7, fontSize: 12, color: "#555", cursor: "pointer", textAlign: "left", transition: "all 0.15s" }}
-            onMouseEnter={e => { e.target.style.color = "#f87171"; e.target.style.borderColor = "#3a1a1a"; }}
-            onMouseLeave={e => { e.target.style.color = "#555"; e.target.style.borderColor = "#1e1e1e"; }}>
-            Sign out →
+
+          {/* Nav */}
+          <nav style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1 }}>
+            {links.map(l => (
+              <NavLink key={l.to} to={l.to} end
+                style={({ isActive }) => ({
+                  display: "block", padding: "9px 12px", borderRadius: 8, fontSize: 13, fontWeight: 500,
+                  textDecoration: "none", transition: "all 0.15s",
+                  background: isActive ? t.navActive : "transparent",
+                  color: isActive ? roleColor : t.navInactive,
+                  border: isActive ? `1px solid ${t.navBorder}` : "1px solid transparent",
+                })}>
+                {l.label}
+              </NavLink>
+            ))}
+          </nav>
+
+          {/* Theme toggle */}
+          <button onClick={() => setDark(x => !x)}
+            style={{ width: "100%", padding: "8px 12px", background: t.toggleBg, border: `1px solid ${t.toggleBorder}`, borderRadius: 8, fontSize: 12, color: t.toggleText, cursor: "pointer", fontWeight: 500, marginBottom: 12 }}>
+            {dark ? "☀️ Light Mode" : "🌙 Dark Mode"}
           </button>
-        </div>
-      </aside>
 
-      {/* Main content */}
-      <main style={{ flex: 1, padding: "32px 36px", overflowY: "auto", background: "#000" }}>
-        {children}
-      </main>
-    </div>
+          {/* User */}
+          <div style={{ borderTop: `1px solid ${t.divider}`, paddingTop: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+              <div style={{ width: 32, height: 32, borderRadius: "50%", background: t.userBg, border: `1px solid ${roleColor}44`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: roleColor, flexShrink: 0 }}>
+                {initials}
+              </div>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: t.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user?.name}</div>
+                <div style={{ fontSize: 10, color: t.muted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user?.email}</div>
+              </div>
+            </div>
+            <button onClick={handleLogout}
+              style={{ width: "100%", padding: "7px 12px", background: "transparent", border: `1px solid ${t.signoutBorder}`, borderRadius: 7, fontSize: 12, color: t.signoutText, cursor: "pointer", textAlign: "left" }}
+              onMouseEnter={e => { e.target.style.color = "#f87171"; e.target.style.borderColor = "#3a1a1a"; }}
+              onMouseLeave={e => { e.target.style.color = t.signoutText; e.target.style.borderColor = t.signoutBorder; }}>
+              Sign out →
+            </button>
+          </div>
+        </aside>
+
+        {/* Main */}
+        <main style={{ flex: 1, padding: "32px 36px", overflowY: "auto", background: t.pageBg }}>
+          {children}
+        </main>
+      </div>
+    </ThemeContext.Provider>
   );
 }
