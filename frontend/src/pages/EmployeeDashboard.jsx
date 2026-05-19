@@ -13,12 +13,9 @@ function useT(dark) {
     subtext:     dark ? "#888"    : "#6b7280",
     card:        dark ? "#111"    : "#ffffff",
     cardBorder:  dark ? "#1e1e1e" : "#e8e5ff",
-    cardHover:   dark ? "#1a1a1a" : "#f0eeff",
     innerBg:     dark ? "#0a0a0a" : "#f8f7ff",
     innerBorder: dark ? "#1a1a1a" : "#ede9ff",
     statCard:    dark ? "#111"    : "#ffffff",
-    btnGreen:    "#10b981",
-    btnIndigo:   "#6366f1",
   };
 }
 
@@ -31,7 +28,7 @@ function ScoreRing({ score, dark }) {
     <div style={{ position: "relative", width: 72, height: 72, flexShrink: 0 }}>
       <svg width="72" height="72" style={{ transform: "rotate(-90deg)" }}>
         <circle cx="36" cy="36" r={r} fill="none" stroke={trackColor} strokeWidth="6" />
-        <circle cx="36" cy="36" r={r} fill="none" stroke={color} strokeWidth="6"
+        <circle cx="36" cy="36" r={r} fill="none" stroke={score ? color : trackColor} strokeWidth="6"
           strokeDasharray={`${fill} ${c}`} strokeLinecap="round"
           style={{ transition: "stroke-dasharray 1s ease" }} />
       </svg>
@@ -45,7 +42,10 @@ function ScoreRing({ score, dark }) {
 
 function AnimatedBar({ pct, color, delay = 0, dark }) {
   const [width, setWidth] = useState(0);
-  useEffect(() => { const t = setTimeout(() => setWidth(pct), 200 + delay); return () => clearTimeout(t); }, [pct, delay]);
+  useEffect(() => {
+    const t = setTimeout(() => setWidth(pct), 200 + delay);
+    return () => clearTimeout(t);
+  }, [pct, delay]);
   return (
     <div style={{ height: 6, background: dark ? "#1a1a1a" : "#e5e7eb", borderRadius: 3, overflow: "hidden" }}>
       <div style={{ height: "100%", borderRadius: 3, background: color, width: `${width}%`, transition: "width 1s ease" }} />
@@ -62,23 +62,36 @@ export default function EmployeeDashboard() {
   const t = useT(dark);
 
   useEffect(() => {
-    api.get("/api/goals/sheet/my")
-      .then(data => setSheets(Array.isArray(data) ? data : []))
-      .catch(console.error)
-      .finally(() => setLoading(false));
+    const loadAll = async () => {
+      try {
+        const data = await api.get("/api/goals/sheet/my");
+        const sheetsData = Array.isArray(data) ? data : [];
+        // Fetch checkins for every goal to show real scores
+        for (const sheet of sheetsData) {
+          for (const goal of sheet.goals || []) {
+            try {
+              goal.checkins = await api.get(`/api/checkins/goal/${goal.id}`);
+            } catch { goal.checkins = []; }
+          }
+        }
+        setSheets(sheetsData);
+      } catch (e) { console.error(e); }
+      finally { setLoading(false); }
+    };
+    loadAll();
   }, []);
 
-  const totalGoals = sheets.reduce((a, s) => a + (s.goals?.length || 0), 0);
+  const totalGoals     = sheets.reduce((a, s) => a + (s.goals?.length || 0), 0);
   const approvedSheets = sheets.filter(s => s.status === "approved").length;
-  const allScores = sheets.flatMap(s => s.goals?.flatMap(g => g.checkins?.map(c => c.score).filter(Boolean) || []) || []);
-  const avgScore = allScores.length ? Math.round(allScores.reduce((a, b) => a + b, 0) / allScores.length) : null;
+  const allScores      = sheets.flatMap(s => s.goals?.flatMap(g => (g.checkins || []).map(c => c.score).filter(v => v != null)) || []);
+  const avgScore       = allScores.length ? Math.round(allScores.reduce((a, b) => a + b, 0) / allScores.length) : null;
 
   const STATUS_CONFIG = {
-    draft:     { label: "Draft",     bg: dark ? "#1a1a2e" : "#f3f4f6", color: dark ? "#888" : "#6b7280",    border: dark ? "#333" : "#d1d5db" },
-    submitted: { label: "Submitted", bg: dark ? "#1a1500" : "#fffbeb", color: "#f59e0b",                    border: dark ? "#3a3000" : "#fde68a" },
-    approved:  { label: "Approved",  bg: dark ? "#001a0e" : "#f0fdf4", color: "#10b981",                    border: dark ? "#003a1e" : "#bbf7d0" },
-    returned:  { label: "Returned",  bg: dark ? "#1a0a0a" : "#fef2f2", color: "#f87171",                    border: dark ? "#3a1515" : "#fecaca" },
-    locked:    { label: "Locked",    bg: dark ? "#0a0a1a" : "#eef2ff", color: "#6366f1",                    border: dark ? "#1a1a3a" : "#c7d2fe" },
+    draft:     { label: "Draft",     bg: dark ? "#1a1a2e" : "#f3f4f6", color: dark ? "#888" : "#6b7280", border: dark ? "#333" : "#d1d5db" },
+    submitted: { label: "Submitted", bg: dark ? "#1a1500" : "#fffbeb", color: "#f59e0b",                  border: dark ? "#3a3000" : "#fde68a" },
+    approved:  { label: "Approved",  bg: dark ? "#001a0e" : "#f0fdf4", color: "#10b981",                  border: dark ? "#003a1e" : "#bbf7d0" },
+    returned:  { label: "Returned",  bg: dark ? "#1a0a0a" : "#fef2f2", color: "#f87171",                  border: dark ? "#3a1515" : "#fecaca" },
+    locked:    { label: "Locked",    bg: dark ? "#0a0a1a" : "#eef2ff", color: "#6366f1",                  border: dark ? "#1a1a3a" : "#c7d2fe" },
   };
 
   if (loading) return (
@@ -139,7 +152,7 @@ export default function EmployeeDashboard() {
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           {sheets.map(sheet => {
             const cfg = STATUS_CONFIG[sheet.status] || STATUS_CONFIG.draft;
-            const sheetScores = sheet.goals?.flatMap(g => g.checkins?.map(c => c.score).filter(s => s != null) || []) || [];
+            const sheetScores = (sheet.goals || []).flatMap(g => (g.checkins || []).map(c => c.score).filter(v => v != null));
             const sheetAvg = sheetScores.length ? Math.round(sheetScores.reduce((a, b) => a + b, 0) / sheetScores.length) : null;
             return (
               <div key={sheet.id} style={{ background: t.card, border: `1px solid ${t.cardBorder}`, borderRadius: 16, overflow: "hidden", boxShadow: dark ? "none" : "0 2px 12px rgba(99,102,241,0.06)" }}>
@@ -187,10 +200,11 @@ export default function EmployeeDashboard() {
                 <div style={{ padding: "16px 24px 20px" }}>
                   <div style={{ fontSize: 11, color: t.muted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>Goals & Weightage</div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                    {sheet.goals?.map((goal, gi) => {
+                    {(sheet.goals || []).map((goal, gi) => {
                       const color = GOAL_COLORS[gi % GOAL_COLORS.length];
-                      const latestScore = goal.checkins?.filter(c => c.score != null).slice(-1)[0]?.score;
-                      const completedCheckins = goal.checkins?.filter(c => c.is_completed).length || 0;
+                      const checkins = goal.checkins || [];
+                      const latestScore = checkins.filter(c => c.score != null).slice(-1)[0]?.score;
+                      const completedCheckins = checkins.filter(c => c.is_completed).length;
                       return (
                         <div key={goal.id}>
                           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
