@@ -235,7 +235,7 @@ export default function AdminDashboard() {
                     <td style={{ padding: "14px 20px", color: t.muted }}>{new Date(c.start_date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</td>
                     <td style={{ padding: "14px 20px", color: t.muted }}>{new Date(c.end_date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</td>
                     <td style={{ padding: "14px 20px" }}>
-                      <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 20, fontWeight: 600, background: c.is_active ? (dark ? "#001a0e" : "#f0fdf4"), color: c.is_active ? "#10b981" : t.muted, border: `1px solid ${c.is_active ? "#10b98133" : t.cardBorder}` }}>
+                      <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 20, fontWeight: 600, background: c.is_active ? (dark ? "#001a0e" : "#f0fdf4") : t.innerBg, color: c.is_active ? "#10b981" : t.muted, border: `1px solid ${c.is_active ? "#10b98133" : t.cardBorder}` }}>
                         {c.is_active ? "● Active" : "○ Inactive"}
                       </span>
                     </td>
