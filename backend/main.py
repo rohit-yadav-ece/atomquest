@@ -30,3 +30,10 @@ def on_startup():
 @app.get("/")
 def root():
     return {"message": "AtomQuest API running 🚀"}
+
+@app.get("/force-seed")
+def force_seed():
+    Base.metadata.create_all(bind=engine)
+    from seed import seed_db
+    seed_db()
+    return {"message": "Seeded!"}
