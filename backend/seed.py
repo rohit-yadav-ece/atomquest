@@ -6,10 +6,9 @@ def seed_db():
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:
-        existing = db.query(User).first()
-        if existing:
-            print("DB already seeded. Skipping.")
-            return
+        # Delete existing users and reseed with correct hashes
+        db.query(User).delete()
+        db.commit()
 
         users = [
             User(email="admin@atomquest.com",    hashed_password=get_password_hash("admin123"),   role="admin",    name="Admin User"),
