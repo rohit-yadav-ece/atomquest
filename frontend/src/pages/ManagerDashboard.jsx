@@ -1,15 +1,26 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../components/shared/Layout";
 import { api } from "../utils/api";
+
+const UOM_LABELS = {
+  numeric: "Numeric", percentage: "%", timeline: "Timeline", zero_based: "0-Based"
+};
 
 export default function ManagerDashboard() {
   const [sheets, setSheets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [comments, setComments] = useState({});
   const [msg, setMsg] = useState("");
+  const [msgType, setMsgType] = useState("success");
+  const [processing, setProcessing] = useState({});
+  const { user } = useAuth();
+  const { dark } = useTheme();
 
   const load = () => {
+    setLoading(true);
     api.get("/api/goals/sheet/team/pending")
-      .then(setSheets)
+      .then(data => setSheets(Array.isArray(data) ? data : []))
       .catch(console.error)
       .finally(() => setLoading(false));
   };
@@ -17,72 +28,189 @@ export default function ManagerDashboard() {
   useEffect(() => { load(); }, []);
 
   const review = async (sheetId, action) => {
+    setProcessing(p => ({ ...p, [sheetId]: action }));
     try {
       await api.post(`/api/goals/sheet/${sheetId}/review`, {
-        action,
-        comment: comments[sheetId] || ""
+        action, comment: comments[sheetId] || ""
       });
-      setMsg(`✅ Sheet ${action}d`);
+      setMsg(`Sheet ${action === "approve" ? "approved ✅" : "returned ↩"} successfully`);
+      setMsgType(action === "approve" ? "success" : "warning");
       load();
     } catch (err) {
-      setMsg(`❌ ${err.message}`);
+      setMsg(`Error: ${err.message}`);
+      setMsgType("error");
+    } finally {
+      setProcessing(p => ({ ...p, [sheetId]: null }));
     }
   };
 
-  if (loading) return <div className="text-gray-500">Loading...</div>;
+  const t = {
+    bg:          dark ? "#000"     : "#f4f3ff",
+    card:        dark ? "#111"     : "#fff",
+    cardBorder:  dark ? "#1e1e1e"  : "#e8e5ff",
+    cardHover:   dark ? "#222"     : "#e0ddff",
+    text:        dark ? "#fff"     : "#1e1b4b",
+    muted:       dark ? "#555"     : "#9ca3af",
+    subtext:     dark ? "#888"     : "#6b7280",
+    goalBg:      dark ? "#0a0a0a"  : "#f8f7ff",
+    goalBorder:  dark ? "#1a1a1a"  : "#e8e5ff",
+    inputBg:     dark ? "#0a0a0a"  : "#f9f9ff",
+    inputBorder: dark ? "#2a2a2a"  : "#e5e3ff",
+    inputText:   dark ? "#ccc"     : "#1e1b4b",
+  };
+
+  if (loading) return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "60vh" }}>
+      <div style={{ textAlign: "center" }}>
+        <div style={{ width: 40, height: 40, border: "3px solid #1e1e1e", borderTop: "3px solid #0ea5e9", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 12px" }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        <div style={{ color: "#555", fontSize: 13 }}>Loading approvals...</div>
+      </div>
+    </div>
+  );
 
   return (
-    <div>
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">Pending Approvals</h2>
-      {msg && <div className="mb-4 p-3 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-lg text-sm">{msg}</div>}
+    <div style={{ fontFamily: "'Inter', -apple-system, sans-serif", color: t.text, maxWidth: 900, margin: "0 auto" }}>
 
+      {/* Header */}
+      <div style={{ marginBottom: 28 }}>
+        <div style={{ fontSize: 11, color: t.muted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>Manager View</div>
+        <h1 style={{ fontSize: 26, fontWeight: 700, margin: 0, color: t.text }}>Team Approvals</h1>
+        <div style={{ fontSize: 13, color: t.muted, marginTop: 2 }}>
+          Welcome, {user?.name?.split(" ")[0]} · {sheets.length} pending review{sheets.length !== 1 ? "s" : ""}
+        </div>
+      </div>
+
+      {/* Stats */}
+      {sheets.length > 0 && (
+        <div style={{ display: "flex", gap: 12, marginBottom: 24 }}>
+          {[
+            { label: "Pending Reviews", value: sheets.length, color: "#f59e0b" },
+            { label: "Total Goals to Review", value: sheets.reduce((a, s) => a + (s.goals?.length || 0), 0), color: "#0ea5e9" },
+            { label: "Employees Waiting", value: new Set(sheets.map(s => s.employee_id)).size, color: "#10b981" },
+          ].map(stat => (
+            <div key={stat.label} style={{ flex: 1, background: t.card, border: `1px solid ${t.cardBorder}`, borderRadius: 12, padding: "16px 20px" }}>
+              <div style={{ fontSize: 26, fontWeight: 700, color: stat.color }}>{stat.value}</div>
+              <div style={{ fontSize: 11, color: t.muted, marginTop: 2 }}>{stat.label}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Toast message */}
+      {msg && (
+        <div style={{
+          marginBottom: 20, padding: "12px 16px", borderRadius: 10, fontSize: 13, fontWeight: 500,
+          background: msgType === "success" ? (dark ? "#001a0e" : "#f0fdf4") : msgType === "warning" ? (dark ? "#1a1000" : "#fffbeb") : (dark ? "#1a0a0a" : "#fef2f2"),
+          border: `1px solid ${msgType === "success" ? "#10b981" : msgType === "warning" ? "#f59e0b" : "#f87171"}33`,
+          color: msgType === "success" ? "#10b981" : msgType === "warning" ? "#f59e0b" : "#f87171",
+          display: "flex", justifyContent: "space-between", alignItems: "center"
+        }}>
+          {msg}
+          <button onClick={() => setMsg("")} style={{ background: "none", border: "none", color: "inherit", cursor: "pointer", fontSize: 16 }}>×</button>
+        </div>
+      )}
+
+      {/* Empty state */}
       {sheets.length === 0 ? (
-        <div className="bg-white rounded-xl border border-dashed border-gray-300 p-12 text-center text-gray-400">
-          <p>No pending approvals 🎉</p>
+        <div style={{ background: t.card, border: `1px dashed ${t.cardBorder}`, borderRadius: 16, padding: "60px 40px", textAlign: "center" }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>🎉</div>
+          <div style={{ fontSize: 18, fontWeight: 600, color: t.text, marginBottom: 8 }}>All caught up!</div>
+          <div style={{ fontSize: 13, color: t.muted }}>No pending approvals right now. Check back later.</div>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           {sheets.map(sheet => (
-            <div key={sheet.id} className="bg-white rounded-xl border border-gray-200 p-5">
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <p className="font-semibold text-gray-800">Employee #{sheet.employee_id} — Sheet #{sheet.id}</p>
-                  <p className="text-sm text-gray-500">{sheet.goals.length} goals · Submitted {new Date(sheet.submitted_at).toLocaleDateString()}</p>
-                </div>
-                <span className="text-xs px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full">Pending</span>
-              </div>
+            <div key={sheet.id} style={{ background: t.card, border: `1px solid ${t.cardBorder}`, borderRadius: 16, overflow: "hidden" }}>
 
-              {/* Goals list */}
-              <div className="space-y-1 mb-4">
-                {sheet.goals.map(goal => (
-                  <div key={goal.id} className="flex items-center justify-between text-sm bg-gray-50 rounded px-3 py-2">
-                    <span className="text-gray-700">{goal.title}</span>
-                    <div className="flex items-center gap-3 text-gray-500 shrink-0">
-                      <span>{goal.uom}</span>
-                      <span>Target: {goal.annual_target}</span>
-                      <span className="font-semibold text-indigo-600">{goal.weightage}%</span>
+              {/* Sheet header */}
+              <div style={{ padding: "20px 24px", borderBottom: `1px solid ${t.goalBorder}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+                    <div style={{ width: 36, height: 36, borderRadius: "50%", background: dark ? "#0ea5e922" : "#e0f2fe", border: "1px solid #0ea5e944", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: "#0ea5e9" }}>
+                      {sheet.employee_name ? sheet.employee_name.split(" ").map(w => w[0]).join("").slice(0, 2) : "E" + sheet.employee_id}
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: t.text }}>
+                        {sheet.employee_name || `Employee #${sheet.employee_id}`}
+                      </div>
+                      <div style={{ fontSize: 12, color: t.muted }}>
+                        {sheet.goals?.length || 0} goals · Submitted {new Date(sheet.submitted_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                      </div>
                     </div>
                   </div>
-                ))}
+                </div>
+                <span style={{ fontSize: 11, padding: "4px 12px", borderRadius: 20, fontWeight: 600, background: dark ? "#1a1500" : "#fffbeb", color: "#f59e0b", border: "1px solid #f59e0b33" }}>
+                  ⏳ Pending Review
+                </span>
               </div>
 
-              <textarea
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm mb-3"
-                rows={2}
-                placeholder="Add comment (optional)..."
-                value={comments[sheet.id] || ""}
-                onChange={e => setComments(prev => ({ ...prev, [sheet.id]: e.target.value }))}
-              />
+              {/* Goals */}
+              <div style={{ padding: "16px 24px" }}>
+                <div style={{ fontSize: 11, color: t.muted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>Goals to Review</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
+                  {sheet.goals?.map((goal, gi) => {
+                    const colors = ["#6366f1", "#10b981", "#f59e0b", "#0ea5e9", "#ec4899"];
+                    const color = colors[gi % colors.length];
+                    return (
+                      <div key={goal.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: t.goalBg, border: `1px solid ${t.goalBorder}`, borderRadius: 10, padding: "10px 14px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10, flex: 1, minWidth: 0 }}>
+                          <div style={{ width: 8, height: 8, borderRadius: "50%", background: color, flexShrink: 0 }} />
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ fontSize: 13, color: t.text, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{goal.title}</div>
+                            <div style={{ fontSize: 11, color: t.muted, marginTop: 2 }}>{goal.thrust_area}</div>
+                          </div>
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 16, flexShrink: 0, marginLeft: 12 }}>
+                          <div style={{ textAlign: "right" }}>
+                            <div style={{ fontSize: 11, color: t.muted }}>Target</div>
+                            <div style={{ fontSize: 12, fontWeight: 600, color: t.subtext }}>{goal.annual_target} {UOM_LABELS[goal.uom] || goal.uom}</div>
+                          </div>
+                          <div style={{ background: dark ? `${color}18` : `${color}15`, border: `1px solid ${color}33`, borderRadius: 8, padding: "4px 10px", fontSize: 13, fontWeight: 700, color }}>
+                            {goal.weightage}%
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
 
-              <div className="flex gap-2">
-                <button onClick={() => review(sheet.id, "approve")}
-                  className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition">
-                  ✓ Approve
-                </button>
-                <button onClick={() => review(sheet.id, "return")}
-                  className="bg-red-100 text-red-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-200 transition">
-                  ↩ Return
-                </button>
+                {/* Weightage total */}
+                {(() => {
+                  const total = sheet.goals?.reduce((a, g) => a + g.weightage, 0) || 0;
+                  return (
+                    <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 16 }}>
+                      <div style={{ fontSize: 12, color: total === 100 ? "#10b981" : "#f87171", fontWeight: 600 }}>
+                        Total weightage: {total}% {total === 100 ? "✓" : "⚠ should be 100%"}
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Comment box */}
+                <textarea
+                  rows={2}
+                  placeholder="Add a comment for the employee (optional)..."
+                  value={comments[sheet.id] || ""}
+                  onChange={e => setComments(p => ({ ...p, [sheet.id]: e.target.value }))}
+                  style={{ width: "100%", background: t.inputBg, border: `1px solid ${t.inputBorder}`, borderRadius: 10, padding: "10px 14px", fontSize: 13, color: t.inputText, resize: "vertical", outline: "none", marginBottom: 14, boxSizing: "border-box", fontFamily: "inherit" }}
+                />
+
+                {/* Action buttons */}
+                <div style={{ display: "flex", gap: 10 }}>
+                  <button
+                    onClick={() => review(sheet.id, "approve")}
+                    disabled={!!processing[sheet.id]}
+                    style={{ flex: 1, padding: "11px", background: "#10b981", color: "#fff", border: "none", borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: "pointer", opacity: processing[sheet.id] ? 0.6 : 1, transition: "opacity 0.2s" }}>
+                    {processing[sheet.id] === "approve" ? "Approving..." : "✓ Approve"}
+                  </button>
+                  <button
+                    onClick={() => review(sheet.id, "return")}
+                    disabled={!!processing[sheet.id]}
+                    style={{ flex: 1, padding: "11px", background: dark ? "#1a0a0a" : "#fef2f2", color: "#f87171", border: "1px solid #f8717133", borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: "pointer", opacity: processing[sheet.id] ? 0.6 : 1, transition: "opacity 0.2s" }}>
+                    {processing[sheet.id] === "return" ? "Returning..." : "↩ Return for Revision"}
+                  </button>
+                </div>
               </div>
             </div>
           ))}
