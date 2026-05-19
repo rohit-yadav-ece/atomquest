@@ -67,7 +67,7 @@ export default function Login() {
       const user = await login(finalEmail, finalPass);
       if (user.role === "admin") navigate("/admin");
       else if (user.role === "manager") navigate("/manager");
-      else navigate("/dashboard");
+      else navigate("/employee");
     } catch (err) {
       setError("Login failed. Backend may be sleeping — click 'Wake Backend' below.");
     } finally {
