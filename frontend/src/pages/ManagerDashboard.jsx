@@ -3,9 +3,8 @@ import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../components/shared/Layout";
 import { api } from "../utils/api";
 
-const UOM_LABELS = {
-  numeric: "Numeric", percentage: "%", timeline: "Timeline", zero_based: "0-Based"
-};
+const UOM_LABELS = { numeric: "Numeric", percentage: "%", timeline: "Timeline", zero_based: "0-Based" };
+const GOAL_COLORS = ["#6366f1", "#10b981", "#f59e0b", "#0ea5e9", "#ec4899"];
 
 export default function ManagerDashboard() {
   const [sheets, setSheets] = useState([]);
@@ -16,6 +15,20 @@ export default function ManagerDashboard() {
   const [processing, setProcessing] = useState({});
   const { user } = useAuth();
   const { dark } = useTheme();
+
+  const t = {
+    text:        dark ? "#ffffff" : "#1e1b4b",
+    muted:       dark ? "#555"    : "#9ca3af",
+    subtext:     dark ? "#888"    : "#6b7280",
+    card:        dark ? "#111"    : "#ffffff",
+    cardBorder:  dark ? "#1e1e1e" : "#e8e5ff",
+    innerBg:     dark ? "#0a0a0a" : "#f8f7ff",
+    innerBorder: dark ? "#1a1a1a" : "#ede9ff",
+    inputBg:     dark ? "#0a0a0a" : "#f9f9ff",
+    inputBorder: dark ? "#2a2a2a" : "#e5e3ff",
+    inputText:   dark ? "#ccc"    : "#1e1b4b",
+    statCard:    dark ? "#111"    : "#ffffff",
+  };
 
   const load = () => {
     setLoading(true);
@@ -30,9 +43,7 @@ export default function ManagerDashboard() {
   const review = async (sheetId, action) => {
     setProcessing(p => ({ ...p, [sheetId]: action }));
     try {
-      await api.post(`/api/goals/sheet/${sheetId}/review`, {
-        action, comment: comments[sheetId] || ""
-      });
+      await api.post(`/api/goals/sheet/${sheetId}/review`, { action, comment: comments[sheetId] || "" });
       setMsg(`Sheet ${action === "approve" ? "approved ✅" : "returned ↩"} successfully`);
       setMsgType(action === "approve" ? "success" : "warning");
       load();
@@ -44,27 +55,12 @@ export default function ManagerDashboard() {
     }
   };
 
-  const t = {
-    bg:          dark ? "#000"     : "#f4f3ff",
-    card:        dark ? "#111"     : "#fff",
-    cardBorder:  dark ? "#1e1e1e"  : "#e8e5ff",
-    cardHover:   dark ? "#222"     : "#e0ddff",
-    text:        dark ? "#fff"     : "#1e1b4b",
-    muted:       dark ? "#555"     : "#9ca3af",
-    subtext:     dark ? "#888"     : "#6b7280",
-    goalBg:      dark ? "#0a0a0a"  : "#f8f7ff",
-    goalBorder:  dark ? "#1a1a1a"  : "#e8e5ff",
-    inputBg:     dark ? "#0a0a0a"  : "#f9f9ff",
-    inputBorder: dark ? "#2a2a2a"  : "#e5e3ff",
-    inputText:   dark ? "#ccc"     : "#1e1b4b",
-  };
-
   if (loading) return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "60vh" }}>
       <div style={{ textAlign: "center" }}>
-        <div style={{ width: 40, height: 40, border: "3px solid #1e1e1e", borderTop: "3px solid #0ea5e9", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 12px" }} />
+        <div style={{ width: 40, height: 40, border: `3px solid ${dark ? "#1e1e1e" : "#e5e7eb"}`, borderTop: "3px solid #0ea5e9", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 12px" }} />
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-        <div style={{ color: "#555", fontSize: 13 }}>Loading approvals...</div>
+        <div style={{ color: t.muted, fontSize: 13 }}>Loading approvals...</div>
       </div>
     </div>
   );
@@ -89,7 +85,7 @@ export default function ManagerDashboard() {
             { label: "Total Goals to Review", value: sheets.reduce((a, s) => a + (s.goals?.length || 0), 0), color: "#0ea5e9" },
             { label: "Employees Waiting", value: new Set(sheets.map(s => s.employee_id)).size, color: "#10b981" },
           ].map(stat => (
-            <div key={stat.label} style={{ flex: 1, background: t.card, border: `1px solid ${t.cardBorder}`, borderRadius: 12, padding: "16px 20px" }}>
+            <div key={stat.label} style={{ flex: 1, background: t.statCard, border: `1px solid ${t.cardBorder}`, borderRadius: 12, padding: "16px 20px", boxShadow: dark ? "none" : "0 1px 4px rgba(99,102,241,0.06)" }}>
               <div style={{ fontSize: 26, fontWeight: 700, color: stat.color }}>{stat.value}</div>
               <div style={{ fontSize: 11, color: t.muted, marginTop: 2 }}>{stat.label}</div>
             </div>
@@ -97,51 +93,49 @@ export default function ManagerDashboard() {
         </div>
       )}
 
-      {/* Toast message */}
+      {/* Toast */}
       {msg && (
         <div style={{
           marginBottom: 20, padding: "12px 16px", borderRadius: 10, fontSize: 13, fontWeight: 500,
           background: msgType === "success" ? (dark ? "#001a0e" : "#f0fdf4") : msgType === "warning" ? (dark ? "#1a1000" : "#fffbeb") : (dark ? "#1a0a0a" : "#fef2f2"),
-          border: `1px solid ${msgType === "success" ? "#10b981" : msgType === "warning" ? "#f59e0b" : "#f87171"}33`,
+          border: `1px solid ${msgType === "success" ? "#10b981" : msgType === "warning" ? "#f59e0b" : "#f87171"}44`,
           color: msgType === "success" ? "#10b981" : msgType === "warning" ? "#f59e0b" : "#f87171",
           display: "flex", justifyContent: "space-between", alignItems: "center"
         }}>
           {msg}
-          <button onClick={() => setMsg("")} style={{ background: "none", border: "none", color: "inherit", cursor: "pointer", fontSize: 16 }}>×</button>
+          <button onClick={() => setMsg("")} style={{ background: "none", border: "none", color: "inherit", cursor: "pointer", fontSize: 18, lineHeight: 1 }}>×</button>
         </div>
       )}
 
-      {/* Empty state */}
+      {/* Empty */}
       {sheets.length === 0 ? (
-        <div style={{ background: t.card, border: `1px dashed ${t.cardBorder}`, borderRadius: 16, padding: "60px 40px", textAlign: "center" }}>
+        <div style={{ background: t.card, border: `1px dashed ${t.cardBorder}`, borderRadius: 16, padding: "60px 40px", textAlign: "center", boxShadow: dark ? "none" : "0 2px 12px rgba(99,102,241,0.06)" }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}>🎉</div>
           <div style={{ fontSize: 18, fontWeight: 600, color: t.text, marginBottom: 8 }}>All caught up!</div>
-          <div style={{ fontSize: 13, color: t.muted }}>No pending approvals right now. Check back later.</div>
+          <div style={{ fontSize: 13, color: t.muted }}>No pending approvals right now.</div>
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           {sheets.map(sheet => (
-            <div key={sheet.id} style={{ background: t.card, border: `1px solid ${t.cardBorder}`, borderRadius: 16, overflow: "hidden" }}>
+            <div key={sheet.id} style={{ background: t.card, border: `1px solid ${t.cardBorder}`, borderRadius: 16, overflow: "hidden", boxShadow: dark ? "none" : "0 2px 12px rgba(99,102,241,0.06)" }}>
 
               {/* Sheet header */}
-              <div style={{ padding: "20px 24px", borderBottom: `1px solid ${t.goalBorder}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-                    <div style={{ width: 36, height: 36, borderRadius: "50%", background: dark ? "#0ea5e922" : "#e0f2fe", border: "1px solid #0ea5e944", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: "#0ea5e9" }}>
-                      {sheet.employee_name ? sheet.employee_name.split(" ").map(w => w[0]).join("").slice(0, 2) : "E" + sheet.employee_id}
+              <div style={{ padding: "20px 24px", borderBottom: `1px solid ${t.innerBorder}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <div style={{ width: 40, height: 40, borderRadius: "50%", background: dark ? "#0ea5e922" : "#e0f2fe", border: "1px solid #0ea5e944", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, color: "#0ea5e9", flexShrink: 0 }}>
+                    {sheet.employee_name ? sheet.employee_name.split(" ").map(w => w[0]).join("").slice(0, 2) : "E" + sheet.employee_id}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: t.text }}>
+                      {sheet.employee_name || `Employee #${sheet.employee_id}`}
                     </div>
-                    <div>
-                      <div style={{ fontSize: 15, fontWeight: 700, color: t.text }}>
-                        {sheet.employee_name || `Employee #${sheet.employee_id}`}
-                      </div>
-                      <div style={{ fontSize: 12, color: t.muted }}>
-                        {sheet.goals?.length || 0} goals · Submitted {new Date(sheet.submitted_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
-                      </div>
+                    <div style={{ fontSize: 12, color: t.muted }}>
+                      {sheet.goals?.length || 0} goals · Submitted {new Date(sheet.submitted_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
                     </div>
                   </div>
                 </div>
                 <span style={{ fontSize: 11, padding: "4px 12px", borderRadius: 20, fontWeight: 600, background: dark ? "#1a1500" : "#fffbeb", color: "#f59e0b", border: "1px solid #f59e0b33" }}>
-                  ⏳ Pending Review
+                  ⏳ Pending
                 </span>
               </div>
 
@@ -150,10 +144,9 @@ export default function ManagerDashboard() {
                 <div style={{ fontSize: 11, color: t.muted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>Goals to Review</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
                   {sheet.goals?.map((goal, gi) => {
-                    const colors = ["#6366f1", "#10b981", "#f59e0b", "#0ea5e9", "#ec4899"];
-                    const color = colors[gi % colors.length];
+                    const color = GOAL_COLORS[gi % GOAL_COLORS.length];
                     return (
-                      <div key={goal.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: t.goalBg, border: `1px solid ${t.goalBorder}`, borderRadius: 10, padding: "10px 14px" }}>
+                      <div key={goal.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: t.innerBg, border: `1px solid ${t.innerBorder}`, borderRadius: 10, padding: "10px 14px" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 10, flex: 1, minWidth: 0 }}>
                           <div style={{ width: 8, height: 8, borderRadius: "50%", background: color, flexShrink: 0 }} />
                           <div style={{ minWidth: 0 }}>
@@ -161,7 +154,7 @@ export default function ManagerDashboard() {
                             <div style={{ fontSize: 11, color: t.muted, marginTop: 2 }}>{goal.thrust_area}</div>
                           </div>
                         </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 16, flexShrink: 0, marginLeft: 12 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0, marginLeft: 12 }}>
                           <div style={{ textAlign: "right" }}>
                             <div style={{ fontSize: 11, color: t.muted }}>Target</div>
                             <div style={{ fontSize: 12, fontWeight: 600, color: t.subtext }}>{goal.annual_target} {UOM_LABELS[goal.uom] || goal.uom}</div>
@@ -179,35 +172,28 @@ export default function ManagerDashboard() {
                 {(() => {
                   const total = sheet.goals?.reduce((a, g) => a + g.weightage, 0) || 0;
                   return (
-                    <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 16 }}>
-                      <div style={{ fontSize: 12, color: total === 100 ? "#10b981" : "#f87171", fontWeight: 600 }}>
-                        Total weightage: {total}% {total === 100 ? "✓" : "⚠ should be 100%"}
-                      </div>
+                    <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 14 }}>
+                      <span style={{ fontSize: 12, color: total === 100 ? "#10b981" : "#f87171", fontWeight: 600 }}>
+                        Total: {total}% {total === 100 ? "✓" : "⚠ should be 100%"}
+                      </span>
                     </div>
                   );
                 })()}
 
-                {/* Comment box */}
-                <textarea
-                  rows={2}
-                  placeholder="Add a comment for the employee (optional)..."
+                {/* Comment */}
+                <textarea rows={2} placeholder="Add a comment for the employee (optional)..."
                   value={comments[sheet.id] || ""}
                   onChange={e => setComments(p => ({ ...p, [sheet.id]: e.target.value }))}
-                  style={{ width: "100%", background: t.inputBg, border: `1px solid ${t.inputBorder}`, borderRadius: 10, padding: "10px 14px", fontSize: 13, color: t.inputText, resize: "vertical", outline: "none", marginBottom: 14, boxSizing: "border-box", fontFamily: "inherit" }}
-                />
+                  style={{ width: "100%", background: t.inputBg, border: `1px solid ${t.inputBorder}`, borderRadius: 10, padding: "10px 14px", fontSize: 13, color: t.inputText, resize: "vertical", outline: "none", marginBottom: 14, boxSizing: "border-box", fontFamily: "inherit" }} />
 
-                {/* Action buttons */}
+                {/* Actions */}
                 <div style={{ display: "flex", gap: 10 }}>
-                  <button
-                    onClick={() => review(sheet.id, "approve")}
-                    disabled={!!processing[sheet.id]}
-                    style={{ flex: 1, padding: "11px", background: "#10b981", color: "#fff", border: "none", borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: "pointer", opacity: processing[sheet.id] ? 0.6 : 1, transition: "opacity 0.2s" }}>
+                  <button onClick={() => review(sheet.id, "approve")} disabled={!!processing[sheet.id]}
+                    style={{ flex: 1, padding: "11px", background: "#10b981", color: "#fff", border: "none", borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: "pointer", opacity: processing[sheet.id] ? 0.6 : 1 }}>
                     {processing[sheet.id] === "approve" ? "Approving..." : "✓ Approve"}
                   </button>
-                  <button
-                    onClick={() => review(sheet.id, "return")}
-                    disabled={!!processing[sheet.id]}
-                    style={{ flex: 1, padding: "11px", background: dark ? "#1a0a0a" : "#fef2f2", color: "#f87171", border: "1px solid #f8717133", borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: "pointer", opacity: processing[sheet.id] ? 0.6 : 1, transition: "opacity 0.2s" }}>
+                  <button onClick={() => review(sheet.id, "return")} disabled={!!processing[sheet.id]}
+                    style={{ flex: 1, padding: "11px", background: dark ? "#1a0a0a" : "#fef2f2", color: "#f87171", border: "1px solid #f8717133", borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: "pointer", opacity: processing[sheet.id] ? 0.6 : 1 }}>
                     {processing[sheet.id] === "return" ? "Returning..." : "↩ Return for Revision"}
                   </button>
                 </div>
@@ -219,3 +205,4 @@ export default function ManagerDashboard() {
     </div>
   );
 }
+
