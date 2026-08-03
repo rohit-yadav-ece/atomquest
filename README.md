@@ -1,40 +1,40 @@
-# ⚡ AtomQuest — Intelligent Goal Management Platform
+#  AtomQuest — Intelligent Goal Management Platform
 
 > **AtomQuest Hackathon 1.0** · Built for Atomberg · Enterprise-grade performance management, reimagined.
 
 ---
 
-## 🌐 Live Links — Try It Now
+##  Live Links — Try It Now
 
 <div align="center">
 
 | | Service | URL |
 |--|---------|-----|
-| 🌐 | **Frontend App** | https://atomquest-rouge.vercel.app |
-| ⚙️ | **Backend API** | https://atomquest-backend-4prb.onrender.com |
-| 📚 | **API Docs (Swagger)** | https://atomquest-backend-4prb.onrender.com/docs |
-| 💻 | **GitHub Repo** | https://github.com/rohit-yadav-ece/atomquest |
+|  | **Frontend App** | https://atomquest-rouge.vercel.app |
+|  | **Backend API** | https://atomquest-backend-4prb.onrender.com |
+|  | **API Docs (Swagger)** | https://atomquest-backend-4prb.onrender.com/docs |
+|  | **GitHub Repo** | https://github.com/rohit-yadav-ece/atomquest |
 
 </div>
 
-> ⚠️ **Backend runs on Render free tier** — first load may take 30–50 seconds to wake up. Use the **"Wake Backend"** button on the login page!
+>  **Backend runs on Render free tier** — first load may take 30–50 seconds to wake up. Use the **"Wake Backend"** button on the login page!
 
 ---
 
-## 🔐 Demo Credentials — One-Click Login
+##  Demo Credentials — One-Click Login
 
 | Role | Email | Password | Access Level |
 |------|-------|----------|-------------|
-| 👑 Admin | admin@atomquest.com | admin123 | Full system control |
-| 🧑‍💼 Manager | manager@atomquest.com | manager123 | Team approvals & reviews |
-| 👤 Employee 1 | emp1@atomquest.com | emp123 | Priya Sharma · Sales dept |
-| 👤 Employee 2 | emp2@atomquest.com | emp123 | Amit Singh · Operations dept |
+|  Admin | admin@atomquest.com | admin123 | Full system control |
+|  Manager | manager@atomquest.com | manager123 | Team approvals & reviews |
+|  Employee 1 | emp1@atomquest.com | emp123 | Priya Sharma · Sales dept |
+|  Employee 2 | emp2@atomquest.com | emp123 | Amit Singh · Operations dept |
 
-> 💡 Use the **one-click demo buttons** on the login page — no typing needed!
+>  Use the **one-click demo buttons** on the login page — no typing needed!
 
 ---
 
-## 🏛️ System Architecture
+##  System Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -123,7 +123,7 @@
 
 ---
 
-## 🎯 What is AtomQuest?
+##  What is AtomQuest?
 
 AtomQuest is a **full-stack, AI-enhanced, mobile-first goal management portal** that replaces manual spreadsheets with a beautifully designed digital experience. It covers the complete lifecycle of employee performance — from AI-assisted goal creation and manager approval to quarterly check-ins and real-time analytics.
 
@@ -131,13 +131,13 @@ AtomQuest is a **full-stack, AI-enhanced, mobile-first goal management portal** 
 
 ---
 
-## ✨ Feature Highlights
+##  Feature Highlights
 
-### 🤖 AI-Powered Goal Suggestions *(Exclusive Feature)*
-Employees click **"✨ Suggest Goals with AI"** and Claude AI instantly generates **4 smart, department-specific KPI goals** — complete with thrust areas, annual targets, quarterly milestones, and weightages that sum to exactly 100%. Tailored to Atomberg's business context (Sales, Operations, Marketing, Engineering, HR, Finance).
+###  AI-Powered Goal Suggestions *(Exclusive Feature)*
+Employees click **" Suggest Goals with AI"** and Claude AI instantly generates **4 smart, department-specific KPI goals** — complete with thrust areas, annual targets, quarterly milestones, and weightages that sum to exactly 100%. Tailored to Atomberg's business context (Sales, Operations, Marketing, Engineering, HR, Finance).
 
 ```
-Click "✨ Suggest Goals with AI"
+Click " Suggest Goals with AI"
     ↓
 Detect employee department (e.g. Sales)
     ↓
@@ -148,15 +148,15 @@ Goals auto-fill the form instantly
 Employee reviews, edits if needed, saves
 ```
 
-### 🎨 Production-Grade UI/UX
+###  Production-Grade UI/UX
 - **Dark / Light mode** — toggle from the sidebar, saved across sessions
 - **Mobile-first responsive** — hamburger nav, full-width content on phones
 - **Skeleton loading** — shimmer animations instead of spinners
 - **Animated progress bars** — goal weightage bars animate on load
 - **Score rings** — circular SVG indicators with color-coded performance
-- **Confetti 🎉** — full-screen celebration when manager approves a sheet
+- **Confetti ** — full-screen celebration when manager approves a sheet
 
-### 📊 Analytics & Reporting
+###  Analytics & Reporting
 - Status distribution pie chart
 - Quarter-on-Quarter (QoQ) score trend line chart
 - Department-wise average score bar chart
@@ -165,7 +165,7 @@ Employee reviews, edits if needed, saves
 
 ---
 
-## 🔄 Complete Goal Lifecycle
+##  Complete Goal Lifecycle
 
 ```
   [Employee]          [Manager]            [System]
@@ -198,7 +198,7 @@ Employee reviews, edits if needed, saves
 
 ---
 
-## 🏗️ Tech Stack
+##  Tech Stack
 
 | Layer | Technology | Purpose |
 |-------|------------|---------|
@@ -215,7 +215,7 @@ Employee reviews, edits if needed, saves
 
 ---
 
-## 📱 Mobile Experience
+##  Mobile Experience
 
 AtomQuest is fully optimized for mobile devices:
 - **Hamburger sidebar** slides in from the left on tap
@@ -226,7 +226,7 @@ AtomQuest is fully optimized for mobile devices:
 
 ---
 
-## 📊 Score Computation Engine
+##  Score Computation Engine
 
 | UoM Type | Formula | Example |
 |----------|---------|---------|
@@ -237,24 +237,24 @@ AtomQuest is fully optimized for mobile devices:
 
 ---
 
-## 🌟 AtomQuest vs Competition
+##  AtomQuest vs Competition
 
 | Feature | Other Submissions | AtomQuest |
 |---------|------------------|-----------|
-| 🤖 AI Goal Suggestions | ❌ | ✅ Claude-powered |
-| 🌙 Dark / Light Mode | ❌ | ✅ Full theme switching |
-| 📱 Mobile Responsive | ❌ | ✅ Hamburger nav |
-| ⏳ Skeleton Loading | ❌ | ✅ Shimmer animations |
-| 🎉 Confetti on Approval | ❌ | ✅ Full-screen celebration |
-| 🗄️ Persistent Database | ❌ SQLite | ✅ PostgreSQL |
-| 🌱 Auto-seed on Startup | ❌ | ✅ Demo data always ready |
-| ⭕ Score Rings | ❌ | ✅ Animated SVG |
-| 📋 Audit Trail | ❌ | ✅ Full action history |
-| 📥 CSV Export | ❌ | ✅ One-click download |
+|  AI Goal Suggestions | ❌ | ✅ Claude-powered |
+|  Dark / Light Mode | ❌ | ✅ Full theme switching |
+|  Mobile Responsive | ❌ | ✅ Hamburger nav |
+|  Skeleton Loading | ❌ | ✅ Shimmer animations |
+|  Confetti on Approval | ❌ | ✅ Full-screen celebration |
+|  Persistent Database | ❌ SQLite | ✅ PostgreSQL |
+|  Auto-seed on Startup | ❌ | ✅ Demo data always ready |
+|  Score Rings | ❌ | ✅ Animated SVG |
+|  Audit Trail | ❌ | ✅ Full action history |
+|  CSV Export | ❌ | ✅ One-click download |
 
 ---
 
-## 🗂️ Project Structure
+##  Project Structure
 
 ```
 atomquest/
@@ -293,7 +293,7 @@ atomquest/
 
 ---
 
-## 🚀 Local Setup
+##  Local Setup
 
 ### Backend
 ```bash
@@ -317,7 +317,7 @@ App runs at **http://localhost:5173**
 
 ---
 
-## 🏆 Judging Criteria Coverage
+##  Judging Criteria Coverage
 
 | # | Criteria | Implementation | Status |
 |---|----------|---------------|--------|
@@ -332,12 +332,12 @@ App runs at **http://localhost:5173**
 
 <div align="center">
 
-## 👨‍💻 Built By
+##  Built By
 
 **Rohit Yadav**
 [@rohit-yadav-ece](https://github.com/rohit-yadav-ece)
 
-*Crafted with passion for AtomQuest Hackathon 1.0 by Atomberg* ⚡
+*Crafted with passion for AtomQuest Hackathon 1.0 by Atomberg* 
 
 ---
 
